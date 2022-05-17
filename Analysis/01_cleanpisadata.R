@@ -227,11 +227,42 @@ pisa_2012 = readRDS(here("InData","PISA_raw","PISA_2012.RDS")) %>%
   # Year of data
   mutate(year = 2012) %>%
   # Filter key countries for analysis
+  mutate(country_og = floor((country %>% unclass %>% as.numeric)/100) %>% as.character) %>%
+  filter(country_og %in% analysis_countries) %>%
+  # Select key variables
+  select(country,cnt,schoolid,subnatio,gender = st04q01,
+         own_room = st26q02,study_place = st26q03,desk = st26q01,
+         computer = st26q04,
+         age,socioeconomic = hisei,
+         father_educ = fisced,mother_educ = misced,parental_educ = hisced,
+         escs,immig,
+         matches("pv\\d{1}(math|read)$",perl = TRUE),
+         w_fstuwt,
+         sch_female = pcgirls,sch_type = schltype,
+         sch_size = schsize,sch_ratio = stratio) %>%
+  # Variable transformations
+  mutate(female = factor(2 - gender,levels = c(0,1),labels = c("Male","Female")),
+         across(.cols = c(own_room,study_place,desk,computer),
+                .f = ~ 2 - .x),
+         sch_type = factor(
+           case_when(sch_type == 1 | sch_type == 2 ~ 1,
+                     sch_type == 3 ~ 2),
+           levels = c(1,2),
+           labels = c("Private","Government")
+         )) %>%
+  # Further column selection
+  select(-c(gender,father_educ,mother_educ))
+
+## 2015
+pisa_2015 = readRDS(here("InData","PISA_raw","PISA_2015.RDS")) %>%
+  # Year of data
+  mutate(year = 2012) %>%
+  # Filter key countries for analysis
   filter(country %in% analysis_countries) %>%
   # Select key variables
   select(country,cnt,schoolid,subnatio,gender = st04q01,
-         own_room = st20q02,study_place = st20q03,desk = st20q01,
-         computer = st20q04,
+         own_room = st26q02,study_place = st26q03,desk = st26q01,
+         computer = st26q04,
          age,socioeconomic = hisei,
          father_educ = fisced,mother_educ = misced,parental_educ = hisced,
          escs,immig,
